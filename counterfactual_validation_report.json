@@ -1,0 +1,371 @@
+{
+  "timestamp": "2025-09-21 23:31:31",
+  "service_health": {
+    "status": "healthy",
+    "response_time": 0.000919
+  },
+  "semantic_validity": {
+    "tests": [
+      {
+        "original": "The party shall pay damages within 30 days of breach.",
+        "counterfactual": "The party might pay damages within 30 days of fulfillment.",
+        "coherent": true,
+        "changes": [
+          "'shall' \u2192 'might'",
+          "'breach' \u2192 'fulfillment'"
+        ],
+        "type": "word_substitution"
+      },
+      {
+        "original": "The party shall pay damages within 30 days of breach.",
+        "counterfactual": "The party might pay damages within 30 days of adherence.",
+        "coherent": true,
+        "changes": [
+          "'shall' \u2192 'might'",
+          "'breach' \u2192 'adherence'"
+        ],
+        "type": "word_substitution"
+      },
+      {
+        "original": "The party shall pay damages within 30 days of breach.",
+        "counterfactual": "The party will pay damages within 30 days of breach.",
+        "coherent": true,
+        "changes": [
+          "'shall' \u2192 'may'",
+          "'may' \u2192 'will'"
+        ],
+        "type": "word_substitution"
+      },
+      {
+        "original": "The defendant is liable for all damages resulting from negligence.",
+        "counterfactual": "The defendant is not accountable for all damages resulting from negligence.",
+        "coherent": true,
+        "changes": [
+          "'liable' \u2192 'accountable'",
+          "'accountable' \u2192 'not accountable'"
+        ],
+        "type": "word_substitution"
+      },
+      {
+        "original": "The defendant is liable for all damages resulting from negligence.",
+        "counterfactual": "The defendant is exempt for all damages resulting from negligence.",
+        "coherent": true,
+        "changes": [
+          "'liable' \u2192 'responsible'",
+          "'responsible' \u2192 'exempt'"
+        ],
+        "type": "word_substitution"
+      },
+      {
+        "original": "The defendant is liable for all damages resulting from negligence.",
+        "counterfactual": "The defendant is immune for all damages resulting from negligence.",
+        "coherent": true,
+        "changes": [
+          "'liable' \u2192 'accountable'",
+          "'accountable' \u2192 'immune'"
+        ],
+        "type": "word_substitution"
+      },
+      {
+        "original": "This agreement is binding and irrevocable for 5 years.",
+        "counterfactual": "This agreement is void and irrevocable for 5 years.",
+        "coherent": true,
+        "changes": [
+          "'binding' \u2192 'enforceable'",
+          "'enforceable' \u2192 'void'"
+        ],
+        "type": "word_substitution"
+      },
+      {
+        "original": "This agreement is binding and irrevocable for 5 years.",
+        "counterfactual": "This agreement is voluntary and amendable for 5 years.",
+        "coherent": true,
+        "changes": [
+          "'binding' \u2192 'voluntary'",
+          "'irrevocable' \u2192 'amendable'"
+        ],
+        "type": "word_substitution"
+      },
+      {
+        "original": "This agreement is binding and irrevocable for 5 years.",
+        "counterfactual": "This agreement is advisory and amendable for 5 years.",
+        "coherent": true,
+        "changes": [
+          "'binding' \u2192 'advisory'",
+          "'irrevocable' \u2192 'amendable'"
+        ],
+        "type": "word_substitution"
+      }
+    ],
+    "score": 1.0,
+    "details": {
+      "total_tests": 9,
+      "passed_tests": 9,
+      "pass_rate": 1.0
+    }
+  },
+  "impact_assessment_accuracy": {
+    "tests": [
+      {
+        "text": "The party shall pay damages within 30 days of breach.",
+        "change": "'breach' \u2192 'compliance'",
+        "predicted_impact": "high",
+        "expected_impact": "high",
+        "correct": true
+      },
+      {
+        "text": "The party shall pay damages within 30 days of breach.",
+        "change": "'shall' \u2192 'may'",
+        "predicted_impact": "high",
+        "expected_impact": "high",
+        "correct": true
+      },
+      {
+        "text": "This agreement is binding and irrevocable for 5 years.",
+        "change": "'irrevocable' \u2192 'revocable'",
+        "predicted_impact": "high",
+        "expected_impact": "high",
+        "correct": true
+      },
+      {
+        "text": "This agreement is binding and irrevocable for 5 years.",
+        "change": "'irrevocable' \u2192 'conditional'",
+        "predicted_impact": "high",
+        "expected_impact": "high",
+        "correct": true
+      },
+      {
+        "text": "This agreement is binding and irrevocable for 5 years.",
+        "change": "'binding' \u2192 'advisory'",
+        "predicted_impact": "high",
+        "expected_impact": "high",
+        "correct": true
+      },
+      {
+        "text": "This agreement is binding and irrevocable for 5 years.",
+        "change": "'irrevocable' \u2192 'revocable'",
+        "predicted_impact": "high",
+        "expected_impact": "high",
+        "correct": true
+      }
+    ],
+    "score": 1.0,
+    "confusion_matrix": {}
+  },
+  "coverage_completeness": {
+    "tests": [
+      {
+        "text": "The party shall pay damages within 30 days of breach.",
+        "expected_types": [
+          "contextual_scenario",
+          "word_substitution",
+          "targeted_refute"
+        ],
+        "generated_types": [
+          "contextual_scenario",
+          "word_substitution",
+          "negation"
+        ],
+        "coverage": 0.6666666666666666,
+        "missing_types": [
+          "targeted_refute"
+        ]
+      },
+      {
+        "text": "The defendant is liable for all damages resulting from negligence.",
+        "expected_types": [
+          "word_substitution",
+          "targeted_refute",
+          "negation"
+        ],
+        "generated_types": [
+          "contextual_scenario",
+          "word_substitution",
+          "negation"
+        ],
+        "coverage": 0.6666666666666666,
+        "missing_types": [
+          "targeted_refute"
+        ]
+      },
+      {
+        "text": "This agreement is binding and irrevocable for 5 years.",
+        "expected_types": [
+          "contextual_scenario",
+          "word_substitution"
+        ],
+        "generated_types": [
+          "contextual_scenario",
+          "word_substitution",
+          "negation"
+        ],
+        "coverage": 1.0,
+        "missing_types": []
+      }
+    ],
+    "score": 0.75,
+    "coverage_analysis": {}
+  },
+  "consistency_tests": {
+    "tests": [],
+    "score": 1.0,
+    "stability_metrics": {}
+  },
+  "expert_alignment": {
+    "tests": [
+      {
+        "rule": "Legal obligation modifiers (shall/may/must) should have HIGH impact",
+        "text": "The party shall pay damages within 30 days of breach.",
+        "satisfied": true
+      },
+      {
+        "rule": "Liability changes (liable/not liable) should have HIGH impact",
+        "text": "The party shall pay damages within 30 days of breach.",
+        "satisfied": false
+      },
+      {
+        "rule": "Binding/revocable changes should have HIGH impact",
+        "text": "The party shall pay damages within 30 days of breach.",
+        "satisfied": false
+      },
+      {
+        "rule": "Complete reversal changes should have HIGH impact",
+        "text": "The party shall pay damages within 30 days of breach.",
+        "satisfied": false
+      },
+      {
+        "rule": "Scope changes (all/some/no) should have MEDIUM-HIGH impact",
+        "text": "The party shall pay damages within 30 days of breach.",
+        "satisfied": true
+      },
+      {
+        "rule": "Temporal absoluteness changes should have MEDIUM-HIGH impact",
+        "text": "The party shall pay damages within 30 days of breach.",
+        "satisfied": false
+      },
+      {
+        "rule": "Requirement strength changes (required/optional) should have HIGH impact",
+        "text": "The party shall pay damages within 30 days of breach.",
+        "satisfied": false
+      },
+      {
+        "rule": "Validity changes (void/valid) should have HIGH impact",
+        "text": "The party shall pay damages within 30 days of breach.",
+        "satisfied": false
+      },
+      {
+        "rule": "Low-impact synonyms should have LOW impact",
+        "text": "The party shall pay damages within 30 days of breach.",
+        "satisfied": false
+      },
+      {
+        "rule": "Negation type counterfactuals should typically have HIGH impact",
+        "text": "The party shall pay damages within 30 days of breach.",
+        "satisfied": true
+      },
+      {
+        "rule": "Legal obligation modifiers (shall/may/must) should have HIGH impact",
+        "text": "The defendant is liable for all damages resulting from negligence.",
+        "satisfied": false
+      },
+      {
+        "rule": "Liability changes (liable/not liable) should have HIGH impact",
+        "text": "The defendant is liable for all damages resulting from negligence.",
+        "satisfied": true
+      },
+      {
+        "rule": "Binding/revocable changes should have HIGH impact",
+        "text": "The defendant is liable for all damages resulting from negligence.",
+        "satisfied": false
+      },
+      {
+        "rule": "Complete reversal changes should have HIGH impact",
+        "text": "The defendant is liable for all damages resulting from negligence.",
+        "satisfied": true
+      },
+      {
+        "rule": "Scope changes (all/some/no) should have MEDIUM-HIGH impact",
+        "text": "The defendant is liable for all damages resulting from negligence.",
+        "satisfied": true
+      },
+      {
+        "rule": "Temporal absoluteness changes should have MEDIUM-HIGH impact",
+        "text": "The defendant is liable for all damages resulting from negligence.",
+        "satisfied": false
+      },
+      {
+        "rule": "Requirement strength changes (required/optional) should have HIGH impact",
+        "text": "The defendant is liable for all damages resulting from negligence.",
+        "satisfied": false
+      },
+      {
+        "rule": "Validity changes (void/valid) should have HIGH impact",
+        "text": "The defendant is liable for all damages resulting from negligence.",
+        "satisfied": false
+      },
+      {
+        "rule": "Low-impact synonyms should have LOW impact",
+        "text": "The defendant is liable for all damages resulting from negligence.",
+        "satisfied": false
+      },
+      {
+        "rule": "Negation type counterfactuals should typically have HIGH impact",
+        "text": "The defendant is liable for all damages resulting from negligence.",
+        "satisfied": true
+      },
+      {
+        "rule": "Legal obligation modifiers (shall/may/must) should have HIGH impact",
+        "text": "This agreement is binding and irrevocable for 5 years.",
+        "satisfied": false
+      },
+      {
+        "rule": "Liability changes (liable/not liable) should have HIGH impact",
+        "text": "This agreement is binding and irrevocable for 5 years.",
+        "satisfied": false
+      },
+      {
+        "rule": "Binding/revocable changes should have HIGH impact",
+        "text": "This agreement is binding and irrevocable for 5 years.",
+        "satisfied": true
+      },
+      {
+        "rule": "Complete reversal changes should have HIGH impact",
+        "text": "This agreement is binding and irrevocable for 5 years.",
+        "satisfied": false
+      },
+      {
+        "rule": "Scope changes (all/some/no) should have MEDIUM-HIGH impact",
+        "text": "This agreement is binding and irrevocable for 5 years.",
+        "satisfied": true
+      },
+      {
+        "rule": "Temporal absoluteness changes should have MEDIUM-HIGH impact",
+        "text": "This agreement is binding and irrevocable for 5 years.",
+        "satisfied": false
+      },
+      {
+        "rule": "Requirement strength changes (required/optional) should have HIGH impact",
+        "text": "This agreement is binding and irrevocable for 5 years.",
+        "satisfied": false
+      },
+      {
+        "rule": "Validity changes (void/valid) should have HIGH impact",
+        "text": "This agreement is binding and irrevocable for 5 years.",
+        "satisfied": false
+      },
+      {
+        "rule": "Low-impact synonyms should have LOW impact",
+        "text": "This agreement is binding and irrevocable for 5 years.",
+        "satisfied": false
+      },
+      {
+        "rule": "Negation type counterfactuals should typically have HIGH impact",
+        "text": "This agreement is binding and irrevocable for 5 years.",
+        "satisfied": true
+      }
+    ],
+    "score": 0.3333333333333333,
+    "expert_rules": {}
+  },
+  "overall_score": 0.8166666666666667
+}

@@ -214,23 +214,81 @@ class CounterfactualGenerator:
     """Generate counterfactual examples for legal claims"""
     
     def __init__(self):
+        # Enhanced legal modifiers with more comprehensive relationships
         self.legal_modifiers = {
-            'shall': ['may', 'should', 'will', 'must'],
-            'must': ['shall', 'may', 'should', 'will'],
-            'liable': ['responsible', 'accountable', 'not liable'],
-            'required': ['optional', 'recommended', 'prohibited'],
-            'terminate': ['continue', 'extend', 'suspend'],
-            'confidential': ['public', 'proprietary', 'restricted'],
-            'immediately': ['within 30 days', 'eventually', 'never'],
-            'all': ['some', 'no', 'most'],
-            'any': ['no', 'specific', 'certain'],
-            'binding': ['non-binding', 'advisory', 'enforceable'],
-            'penalty': ['incentive', 'reward', 'bonus'],
-            'breach': ['compliance', 'fulfillment', 'violation'],
-            'damages': ['compensation', 'benefits', 'reimbursement'],
-            'void': ['valid', 'enforceable', 'binding'],
-            'exclusive': ['non-exclusive', 'shared', 'joint'],
-            'irrevocable': ['revocable', 'conditional', 'temporary']
+            # Obligation strength (critical changes)
+            'shall': ['may', 'should', 'will', 'must', 'might'],
+            'must': ['shall', 'may', 'should', 'will', 'might'],
+            'will': ['shall', 'may', 'should', 'must', 'might'],
+            'may': ['shall', 'must', 'should', 'will', 'might'],
+            'required': ['optional', 'recommended', 'prohibited', 'forbidden'],
+            'mandatory': ['optional', 'voluntary', 'discretionary'],
+            'obligated': ['entitled', 'permitted', 'authorized'],
+            
+            # Liability and responsibility
+            'liable': ['responsible', 'accountable', 'not liable', 'exempt'],
+            'responsible': ['liable', 'accountable', 'not responsible', 'exempt'],
+            'accountable': ['liable', 'responsible', 'not accountable', 'immune'],
+            
+            # Legal actions and consequences  
+            'terminate': ['continue', 'extend', 'suspend', 'renew', 'maintain'],
+            'breach': ['compliance', 'fulfillment', 'violation', 'adherence'],
+            'violation': ['compliance', 'breach', 'fulfillment', 'observance'],
+            'default': ['performance', 'compliance', 'fulfillment'],
+            
+            # Binding and enforceability
+            'binding': ['non-binding', 'advisory', 'enforceable', 'voluntary'],
+            'enforceable': ['unenforceable', 'binding', 'valid', 'void'],
+            'valid': ['void', 'invalid', 'null', 'enforceable'],
+            'void': ['valid', 'enforceable', 'binding', 'effective'],
+            'null': ['valid', 'effective', 'enforceable'],
+            
+            # Revocability and permanence
+            'irrevocable': ['revocable', 'conditional', 'temporary', 'amendable'],
+            'revocable': ['irrevocable', 'permanent', 'final', 'unchangeable'],
+            'permanent': ['temporary', 'provisional', 'interim', 'revocable'],
+            'temporary': ['permanent', 'indefinite', 'perpetual', 'irrevocable'],
+            
+            # Scope and extent
+            'all': ['some', 'no', 'most', 'few', 'none'],
+            'any': ['no', 'specific', 'certain', 'particular'],
+            'some': ['all', 'no', 'most', 'few', 'many'],
+            'no': ['all', 'some', 'any', 'several'],
+            'none': ['all', 'some', 'any', 'several'],
+            'every': ['some', 'no', 'certain', 'selected'],
+            'unlimited': ['limited', 'capped', 'restricted', 'bounded'],
+            'limited': ['unlimited', 'unrestricted', 'boundless', 'infinite'],
+            
+            # Temporal aspects
+            'immediately': ['within 30 days', 'eventually', 'never', 'promptly'],
+            'never': ['immediately', 'always', 'eventually', 'sometimes'],
+            'always': ['never', 'sometimes', 'occasionally', 'rarely'],
+            'promptly': ['eventually', 'immediately', 'delayed', 'slowly'],
+            'forthwith': ['eventually', 'delayed', 'at convenience'],
+            
+            # Exclusivity and access
+            'exclusive': ['non-exclusive', 'shared', 'joint', 'common'],
+            'confidential': ['public', 'proprietary', 'restricted', 'open'],
+            'private': ['public', 'open', 'shared', 'common'],
+            'proprietary': ['public', 'open-source', 'shared', 'common'],
+            
+            # Financial and penalty terms
+            'penalty': ['incentive', 'reward', 'bonus', 'benefit'],
+            'damages': ['compensation', 'benefits', 'reimbursement', 'payment'],
+            'fine': ['reward', 'bonus', 'payment', 'compensation'],
+            'interest': ['principal', 'discount', 'rebate'],
+            
+            # Rights and permissions
+            'authorized': ['unauthorized', 'prohibited', 'forbidden', 'banned'],
+            'permitted': ['prohibited', 'forbidden', 'banned', 'restricted'],
+            'entitled': ['not entitled', 'disqualified', 'ineligible'],
+            'eligible': ['ineligible', 'disqualified', 'excluded'],
+            
+            # Certainty and conditionality
+            'absolute': ['conditional', 'relative', 'qualified', 'limited'],
+            'conditional': ['absolute', 'unconditional', 'definite', 'certain'],
+            'definite': ['indefinite', 'uncertain', 'conditional', 'provisional'],
+            'final': ['preliminary', 'interim', 'provisional', 'temporary'],
         }
         
         self.legal_contexts = {
@@ -274,7 +332,7 @@ class CounterfactualGenerator:
             counterfactuals.extend(contextual_counterfactuals)
             
             # Generate negation counterfactuals
-            negation_counterfactuals = self._generate_negation_examples(original_text, 2)
+            negation_counterfactuals = self._generate_negations(original_text, 2)
             counterfactuals.extend(negation_counterfactuals)
             
             return counterfactuals[:num_examples]
@@ -346,29 +404,138 @@ class CounterfactualGenerator:
         
         return counterfactuals
     
-    def _generate_negation_examples(self, original_text: str, num_examples: int) -> List[Dict[str, Any]]:
-        """Generate counterfactuals by negating key claims"""
+    def _generate_negations(self, original_text: str, num_examples: int = 3) -> List[Dict[str, Any]]:
+        """Generate counterfactuals by negating key claims with enhanced legal precision"""
         counterfactuals = []
         
+        # Enhanced negation patterns with legal context awareness
         negation_patterns = [
-            (r'\bis\b', 'is not'),
-            (r'\bmust\b', 'must not'),
-            (r'\bshall\b', 'shall not'),
-            (r'\bwill\b', 'will not'),
-            (r'\brequired\b', 'not required'),
-            (r'\bliable\b', 'not liable')
+            # Existence and state negations
+            (r'\bis\s+(liable|responsible|accountable)', r'is not \1'),
+            (r'\bare\s+(liable|responsible|accountable)', r'are not \1'),
+            (r'\bis\s+(binding|enforceable|valid)', r'is not \1'),
+            (r'\bare\s+(binding|enforceable|valid)', r'are not \1'),
+            
+            # Obligation negations
+            (r'\bmust\s+', 'must not '),
+            (r'\bshall\s+', 'shall not '),
+            (r'\bwill\s+', 'will not '),
+            (r'\bis\s+required', 'is not required'),
+            (r'\bare\s+required', 'are not required'),
+            (r'\bis\s+obligated', 'is not obligated'),
+            (r'\bare\s+obligated', 'are not obligated'),
+            
+            # Permission and authorization negations
+            (r'\bmay\s+', 'may not '),
+            (r'\bis\s+(authorized|permitted|entitled)', r'is not \1'),
+            (r'\bare\s+(authorized|permitted|entitled)', r'are not \1'),
+            
+            # Temporal negations
+            (r'\bimmediately\b', 'never'),
+            (r'\balways\b', 'never'),
+            (r'\bpermanently\b', 'temporarily'),
+            (r'\birrevocably\b', 'revocably'),
+            
+            # Scope negations - more precise
+            (r'\ball\s+damages', 'no damages'),
+            (r'\bany\s+liability', 'no liability'),
+            (r'\bevery\s+', 'no '),
+            (r'\bunlimited\s+liability', 'no liability'),
+            
+            # Conditional negations
+            (r'\bif\s+(.+?)\s+then', r'if not \1 then'),
+            (r'\bunless\s+(.+?),', r'if \1,'),
         ]
         
-        for i, (pattern, replacement) in enumerate(negation_patterns[:num_examples]):
+        generated_count = 0
+        used_patterns = set()
+        
+        for pattern, replacement in negation_patterns:
+            if generated_count >= num_examples:
+                break
+                
+            # Check if pattern exists in text
             if re.search(pattern, original_text, re.IGNORECASE):
+                # Generate the negation
                 modified_text = re.sub(pattern, replacement, original_text, count=1, flags=re.IGNORECASE)
+                
+                # Avoid duplicate patterns
+                pattern_key = f"{pattern}->{replacement}"
+                if pattern_key in used_patterns:
+                    continue
+                used_patterns.add(pattern_key)
+                
+                # Ensure the modification actually changed the text
+                if modified_text != original_text:
+                    # Extract what was changed for clear explanation
+                    original_match = re.search(pattern, original_text, re.IGNORECASE)
+                    if original_match:
+                        original_phrase = original_match.group(0)
+                        modified_phrase = re.sub(pattern, replacement, original_phrase, flags=re.IGNORECASE)
+                        
+                        counterfactual_example = {
+                            'text': modified_text,
+                            'type': 'negation',
+                            'changes': [f"'{original_phrase}' → '{modified_phrase}'"],
+                            'explanation': f"Negated key legal assertion: {original_phrase} → {modified_phrase}",
+                            'impact': self._assess_negation_impact(original_phrase, modified_phrase),
+                            'likelihood': 'alternative_interpretation'
+                        }
+                        counterfactuals.append(counterfactual_example)
+                        generated_count += 1
+        
+        # If we haven't generated enough, try some additional semantic negations
+        if generated_count < num_examples:
+            semantic_negations = self._generate_semantic_negations(original_text, num_examples - generated_count)
+            counterfactuals.extend(semantic_negations)
+        
+        return counterfactuals
+    
+    def _assess_negation_impact(self, original_phrase: str, modified_phrase: str) -> str:
+        """Assess the impact of a negation change"""
+        high_impact_negations = [
+            'liable', 'binding', 'required', 'must', 'shall', 'valid', 
+            'enforceable', 'unlimited', 'all', 'every', 'always'
+        ]
+        
+        original_lower = original_phrase.lower()
+        if any(term in original_lower for term in high_impact_negations):
+            return 'high'
+        elif any(term in original_lower for term in ['may', 'some', 'occasionally']):
+            return 'medium'
+        else:
+            return 'low'
+    
+    def _generate_semantic_negations(self, original_text: str, num_examples: int) -> List[Dict[str, Any]]:
+        """Generate semantic opposites based on legal meaning"""
+        counterfactuals = []
+        
+        semantic_opposites = {
+            'liable for': 'exempt from',
+            'responsible for': 'not responsible for',
+            'binding agreement': 'non-binding agreement',
+            'enforceable contract': 'unenforceable contract',
+            'unlimited liability': 'no liability',
+            'all damages': 'no damages',
+            'immediate payment': 'deferred payment',
+            'irrevocable consent': 'revocable consent',
+            'exclusive rights': 'non-exclusive rights',
+            'confidential information': 'public information'
+        }
+        
+        for original, opposite in semantic_opposites.items():
+            if len(counterfactuals) >= num_examples:
+                break
+                
+            if original.lower() in original_text.lower():
+                modified_text = re.sub(re.escape(original), opposite, original_text, count=1, flags=re.IGNORECASE)
                 
                 counterfactual_example = {
                     'text': modified_text,
                     'type': 'negation',
-                    'changes': [f"Negated: {pattern} → {replacement}"],
-                    'explanation': f"What if the opposite were true: negated key legal assertion",
-                    'impact': 'high',
+                    'changes': [f"'{original}' → '{opposite}'"],
+                    'explanation': f"Semantic negation: {original} → {opposite}",
+                    'impact': 'high',  # Most semantic opposites are high impact
                     'likelihood': 'alternative_interpretation'
                 }
                 counterfactuals.append(counterfactual_example)
@@ -391,17 +558,141 @@ class CounterfactualGenerator:
             return 'contract'
     
     def _assess_legal_impact(self, changes: List[str]) -> str:
-        """Assess the legal impact of the changes made"""
-        high_impact_words = ['shall', 'must', 'liable', 'damages', 'void', 'breach']
-        medium_impact_words = ['may', 'should', 'required', 'penalty', 'terminate']
+        """Assess the legal impact of changes with enhanced precision"""
+        
+        # Define comprehensive legal impact patterns
+        critical_impact_patterns = [
+            # Complete obligation reversals
+            (r"'shall'\s*→\s*'may'", 'high'),
+            (r"'must'\s*→\s*'may'", 'high'),
+            (r"'required'\s*→\s*'optional'", 'high'),
+            (r"'binding'\s*→\s*'non-binding'", 'high'),
+            (r"'binding'\s*→\s*'advisory'", 'high'),
+            (r"'irrevocable'\s*→\s*'revocable'", 'high'),
+            (r"'liable'\s*→\s*'not liable'", 'high'),
+            (r"'all'\s*→\s*'no'", 'high'),
+            (r"'unlimited'\s*→\s*'limited'", 'high'),
+            (r"'void'\s*→\s*'valid'", 'high'),
+            (r"'breach'\s*→\s*'compliance'", 'high'),
+            
+            # Scope and quantity changes
+            (r"'all'\s*→\s*'some'", 'medium'),
+            (r"'any'\s*→\s*'specific'", 'medium'),
+            (r"'immediately'\s*→\s*'within.*days'", 'medium'),
+            (r"'never'\s*→\s*'eventually'", 'medium'),
+            (r"'exclusive'\s*→\s*'non-exclusive'", 'medium'),
+            
+            # Moderate obligation changes
+            (r"'shall'\s*→\s*'should'", 'medium'),
+            (r"'must'\s*→\s*'should'", 'medium'),
+            (r"'penalty'\s*→\s*'incentive'", 'medium'),
+            
+            # Minor semantic changes
+            (r"'damages'\s*→\s*'compensation'", 'low'),
+            (r"'breach'\s*→\s*'violation'", 'low'),
+            (r"'liable'\s*→\s*'responsible'", 'low'),
+            (r"'confidential'\s*→\s*'proprietary'", 'low'),
+        ]
+        
+        # Legal term impact categories
+        high_impact_terms = {
+            'obligation_strength': ['shall', 'must', 'required', 'mandatory'],
+            'liability': ['liable', 'not liable', 'damages'],
+            'binding_nature': ['binding', 'non-binding', 'void', 'valid'],
+            'scope_complete': ['all', 'no', 'none', 'unlimited', 'limited'],
+            'temporal_absolute': ['immediately', 'never', 'always'],
+            'revocability': ['irrevocable', 'revocable', 'permanent', 'temporary']
+        }
+        
+        medium_impact_terms = {
+            'scope_partial': ['some', 'most', 'any', 'specific'],
+            'obligation_moderate': ['should', 'recommended'],
+            'temporal_relative': ['within', 'days', 'eventually', 'soon'],
+            'exclusivity': ['exclusive', 'non-exclusive', 'shared'],
+            'access_level': ['confidential', 'public', 'restricted']
+        }
+        
+        low_impact_terms = {
+            'synonyms': ['compensation', 'reimbursement', 'payment'],
+            'similar_violations': ['breach', 'violation', 'default'],
+            'similar_responsibility': ['responsible', 'accountable'],
+            'similar_property': ['proprietary', 'restricted']
+        }
+        
+        # Analyze all changes
+        impact_scores = []
+        change_details = []
         
         for change in changes:
-            if any(word in change.lower() for word in high_impact_words):
-                return 'high'
-            elif any(word in change.lower() for word in medium_impact_words):
-                return 'medium'
+            change_lower = change.lower()
+            highest_impact = 'low'
+            
+            # Check exact pattern matches first
+            for pattern, impact in critical_impact_patterns:
+                if re.search(pattern, change_lower):
+                    highest_impact = impact
+                    change_details.append(f"Pattern match: {pattern} → {impact}")
+                    break
+            else:
+                # Check term categories
+                for category, terms in high_impact_terms.items():
+                    if any(term in change_lower for term in terms):
+                        # Special handling for negations
+                        if '→ not' in change_lower or 'not liable' in change_lower:
+                            highest_impact = 'high'
+                            change_details.append(f"Negation: {category} → high")
+                            break
+                        # Check if it's a strong obligation change
+                        elif any(f"'{strong}' → '{weak}'" in change_lower 
+                               for strong in ['shall', 'must', 'required'] 
+                               for weak in ['may', 'should', 'optional']):
+                            highest_impact = 'high'
+                            change_details.append(f"Obligation weakening: {category} → high")
+                            break
+                        elif category in ['binding_nature', 'revocability', 'scope_complete']:
+                            highest_impact = 'high'
+                            change_details.append(f"Critical term: {category} → high")
+                            break
+                        else:
+                            highest_impact = 'medium'
+                            change_details.append(f"High-impact term: {category} → medium")
+                else:
+                    # Check medium impact terms
+                    for category, terms in medium_impact_terms.items():
+                        if any(term in change_lower for term in terms):
+                            if highest_impact == 'low':
+                                highest_impact = 'medium'
+                                change_details.append(f"Medium term: {category} → medium")
+                            break
+                    else:
+                        # Check low impact terms
+                        for category, terms in low_impact_terms.items():
+                            if any(term in change_lower for term in terms):
+                                change_details.append(f"Low term: {category} → low")
+                                break
+            
+            # Convert to numeric score for aggregation
+            if highest_impact == 'high':
+                impact_scores.append(3)
+            elif highest_impact == 'medium':
+                impact_scores.append(2)
+            else:
+                impact_scores.append(1)
         
-        return 'low'
+        # Determine final impact level
+        if not impact_scores:
+            return 'medium'
+        
+        max_score = max(impact_scores)
+        avg_score = sum(impact_scores) / len(impact_scores)
+        
+        # Use maximum impact for critical changes, but consider average for edge cases
+        if max_score >= 3:
+            return 'high'
+        elif max_score >= 2 or avg_score >= 1.5:
+            return 'medium'
+        else:
+            return 'low'
     
     def _assess_likelihood(self, original: str, modified: str) -> str:
         """Assess how likely this counterfactual scenario is"""
@@ -416,50 +707,199 @@ class CounterfactualGenerator:
             return 'unlikely'
     
     def generate_targeted_counterfactuals(self, text: str, target_outcome: str) -> List[Dict[str, Any]]:
-        """Generate counterfactuals targeted at achieving a specific outcome"""
+        """Generate counterfactuals targeted at achieving a specific outcome with enhanced precision"""
         counterfactuals = []
         
         if target_outcome.lower() == 'supports':
-            # Make changes that would support the claim
-            supportive_changes = {
+            # Make changes that would STRENGTHEN the claim
+            strengthening_changes = {
+                # Weaker to stronger obligations
                 'may': 'shall',
                 'should': 'must',
+                'can': 'shall',
+                'might': 'will',
                 'optional': 'required',
-                'not liable': 'liable'
+                'recommended': 'mandatory',
+                'permitted': 'obligated',
+                
+                # Strengthen liability
+                'not liable': 'fully liable',
+                'limited liability': 'unlimited liability',
+                'some damages': 'all damages',
+                'partial responsibility': 'full responsibility',
+                
+                # Strengthen binding nature
+                'non-binding': 'binding',
+                'advisory': 'mandatory',
+                'revocable': 'irrevocable',
+                'temporary': 'permanent',
+                'conditional': 'absolute',
+                
+                # Strengthen scope
+                'some': 'all',
+                'partial': 'complete',
+                'limited': 'unlimited',
+                'restricted': 'unrestricted',
+                
+                # Strengthen temporal requirements
+                'eventually': 'immediately',
+                'within 30 days': 'immediately',
+                'when convenient': 'forthwith'
             }
+            explanation_template = "Strengthened to support the claim"
+            
         elif target_outcome.lower() == 'refutes':
-            # Make changes that would refute the claim
-            supportive_changes = {
+            # Make changes that would WEAKEN or REFUTE the claim
+            weakening_changes = {
+                # Stronger to weaker obligations
                 'shall': 'may',
                 'must': 'should',
+                'will': 'might',
                 'required': 'optional',
-                'liable': 'not liable'
+                'mandatory': 'recommended',
+                'obligated': 'permitted',
+                
+                # Weaken liability
+                'liable': 'not liable',
+                'fully liable': 'partially liable',
+                'unlimited liability': 'no liability',
+                'all damages': 'no damages',
+                'responsible': 'not responsible',
+                
+                # Weaken binding nature
+                'binding': 'non-binding',
+                'enforceable': 'unenforceable',
+                'mandatory': 'advisory',
+                'irrevocable': 'revocable',
+                'permanent': 'temporary',
+                'absolute': 'conditional',
+                
+                # Weaken scope
+                'all': 'no',
+                'every': 'no',
+                'complete': 'partial',
+                'unlimited': 'limited',
+                'unrestricted': 'restricted',
+                
+                # Weaken temporal requirements
+                'immediately': 'eventually',
+                'forthwith': 'when convenient',
+                'always': 'never'
             }
+            explanation_template = "Weakened to refute the claim"
+            
         else:
+            # Default to general modifications
             return self.generate_counterfactuals(text)
         
+        # Select appropriate changes based on target outcome
+        target_changes = strengthening_changes if target_outcome.lower() == 'supports' else weakening_changes
+        
+        # Apply targeted changes
         modified_text = text
         changes_made = []
+        impact_levels = []
         
-        for original, replacement in supportive_changes.items():
-            if original in text.lower():
-                pattern = re.compile(r'\b' + re.escape(original) + r'\b', re.IGNORECASE)
-                modified_text = pattern.sub(replacement, modified_text, count=1)
+        # Try to make multiple relevant changes
+        for original, replacement in target_changes.items():
+            # Use word boundary matching for more precise substitution
+            pattern = r'\b' + re.escape(original) + r'\b'
+            if re.search(pattern, text, re.IGNORECASE):
+                modified_text = re.sub(pattern, replacement, modified_text, count=1, flags=re.IGNORECASE)
                 changes_made.append(f"'{original}' → '{replacement}'")
+                
+                # Assess individual change impact
+                individual_impact = self._assess_targeted_change_impact(original, replacement, target_outcome)
+                impact_levels.append(individual_impact)
+                
+                # Limit to 2-3 changes to maintain coherence
+                if len(changes_made) >= 2:
+                    break
         
+        # Generate contextual targeted scenarios
+        contextual_scenarios = self._generate_targeted_scenarios(text, target_outcome)
+        
+        # Add the main targeted counterfactual
         if changes_made:
+            overall_impact = 'high' if any(imp == 'high' for imp in impact_levels) else 'medium'
+            
             counterfactual = {
                 'text': modified_text,
                 'type': 'targeted_outcome',
                 'target_outcome': target_outcome,
                 'changes': changes_made,
-                'explanation': f"Modified to achieve '{target_outcome}' outcome: {', '.join(changes_made)}",
-                'impact': 'high',
-                'likelihood': 'targeted'
+                'explanation': f"{explanation_template}: {', '.join(changes_made)}",
+                'impact': overall_impact,
+                'likelihood': 'targeted_modification'
             }
             counterfactuals.append(counterfactual)
         
+        # Add contextual scenarios
+        counterfactuals.extend(contextual_scenarios[:2])  # Limit contextual scenarios
+        
         return counterfactuals
+    
+    def _assess_targeted_change_impact(self, original: str, replacement: str, target_outcome: str) -> str:
+        """Assess the impact of a specific targeted change"""
+        high_impact_transitions = [
+            ('shall', 'may'), ('must', 'should'), ('liable', 'not liable'),
+            ('binding', 'non-binding'), ('all', 'no'), ('unlimited', 'limited'),
+            ('irrevocable', 'revocable'), ('required', 'optional')
+        ]
+        
+        # Check if this is a high-impact transition
+        transition = (original.lower(), replacement.lower())
+        reverse_transition = (replacement.lower(), original.lower())
+        
+        if transition in high_impact_transitions or reverse_transition in high_impact_transitions:
+            return 'high'
+        
+        # Check for medium impact changes
+        medium_impact_words = ['should', 'may', 'some', 'partial', 'temporary', 'conditional']
+        if original.lower() in medium_impact_words or replacement.lower() in medium_impact_words:
+            return 'medium'
+        
+        return 'low'
+    
+    def _generate_targeted_scenarios(self, text: str, target_outcome: str) -> List[Dict[str, Any]]:
+        """Generate contextual scenarios that support or refute the claim"""
+        scenarios = []
+        
+        if target_outcome.lower() == 'supports':
+            supporting_scenarios = [
+                "What if additional penalties were imposed for non-compliance?",
+                "What if the obligation was extended to include related activities?",
+                "What if stricter deadlines were enforced?",
+                "What if liability was joint and several?",
+                "What if the agreement included punitive damages?"
+            ]
+            scenario_list = supporting_scenarios
+            impact_level = 'medium'
+            
+        else:  # refutes
+            refuting_scenarios = [
+                "What if there were force majeure exceptions?",
+                "What if the obligation was subject to regulatory approval?",
+                "What if liability was capped at a nominal amount?",
+                "What if the agreement included broad indemnification?",
+                "What if performance was excused under certain conditions?"
+            ]
+            scenario_list = refuting_scenarios
+            impact_level = 'medium'
+        
+        # Select relevant scenarios (up to 2)
+        for scenario in scenario_list[:2]:
+            scenarios.append({
+                'text': scenario,
+                'type': 'targeted_scenario',
+                'target_outcome': target_outcome,
+                'changes': [f"Hypothetical {target_outcome.lower()} scenario"],
+                'explanation': f"Alternative scenario designed to {target_outcome.lower()} the claim",
+                'impact': impact_level,
+                'likelihood': 'hypothetical'
+            })
+        
+        return scenarios
 
 class UncertaintyAnalyzer:
     """Analyze prediction uncertainty and confidence intervals"""

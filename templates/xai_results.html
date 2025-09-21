@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XAI Analysis Results - Legal AI Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { 
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .results-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            margin: 20px auto;
+            padding: 30px;
+        }
+        
+        .xai-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            border-left: 5px solid #007bff;
+        }
+        
+        .clause-card {
+            background: linear-gradient(135deg, #f8f9fa, #ffffff);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .importance-badge {
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 5px 12px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+        
+        .badge-critical { background: #dc3545; color: white; }
+        .badge-high { background: #fd7e14; color: white; }
+        .badge-medium { background: #ffc107; color: black; }
+        .badge-low { background: #28a745; color: white; }
+        
+        .chart-container {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            height: 400px;
+        }
+        
+        .feature-bar {
+            background: #e9ecef;
+            border-radius: 10px;
+            height: 20px;
+            margin: 5px 0;
+            overflow: hidden;
+        }
+        
+        .feature-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #007bff, #0056b3);
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+        
+        .xai-tab {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px 10px 0 0;
+            border: none;
+            padding: 12px 20px;
+            margin-right: 5px;
+            font-weight: 600;
+        }
+        
+        .xai-tab.active {
+            background: white;
+            border-bottom: 3px solid #007bff;
+        }
+        
+        .reasoning-step {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 10px 15px;
+            margin: 8px 0;
+            border-left: 3px solid #007bff;
+        }
+        
+        .confidence-meter {
+            background: #e9ecef;
+            height: 25px;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .confidence-fill {
+            height: 100%;
+            border-radius: 15px;
+            transition: width 1s ease-in-out;
+        }
+        
+        .confidence-high { background: linear-gradient(90deg, #28a745, #20c997); }
+        .confidence-medium { background: linear-gradient(90deg, #ffc107, #fd7e14); }
+        .confidence-low { background: linear-gradient(90deg, #dc3545, #e83e8c); }
+        
+        .counterfactual-card {
+            transition: all 0.3s ease;
+            border: 1px solid #dee2e6;
+        }
+        
+        .counterfactual-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        .counterfactual-text {
+            font-style: italic;
+            line-height: 1.6;
+        }
+        
+        .changes-made ul li {
+            font-size: 0.9rem;
+            margin-bottom: 3px;
+        }
+        
+        .counterfactual-insights {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef) !important;
+        }
+        
+        .counterfactual-insights ul li {
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid py-4">
+        <div class="results-container">
+            <!-- Header -->
+            <div class="row mb-4">
+                <div class="col-md-8">
+                    <h1><i class="fas fa-brain text-primary"></i> XAI Analysis Results</h1>
+                    <p class="lead text-muted">
+                        <i class="fas fa-file-pdf"></i> {{ filename }}
+                        <span class="badge bg-info ms-2">{{ pdf_results.document_info.total_pages or 'N/A' }} pages</span>
+                        <span class="badge bg-success ms-2">{{ pdf_results.document_info.total_clauses_found or 0 }} clauses</span>
+                    </p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <a href="/" class="btn btn-outline-primary">
+                        <i class="fas fa-arrow-left"></i> Analyze Another Document
+                    </a>
+                </div>
+            </div>
+
+            <!-- Summary Dashboard -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="xai-card text-center">
+                        <i class="fas fa-chart-pie fa-2x text-primary mb-2"></i>
+                        <h4>{{ pdf_results.document_info.total_clauses_found or 0 }}</h4>
+                        <p class="text-muted mb-0">Clauses Extracted</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="xai-card text-center">
+                        <i class="fas fa-star fa-2x text-warning mb-2"></i>
+                        <h4>{{ "%.2f"|format(pdf_results.clause_summary.avg_importance_score or 0) }}</h4>
+                        <p class="text-muted mb-0">Avg Importance</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="xai-card text-center">
+                        <i class="fas fa-clock fa-2x text-info mb-2"></i>
+                        <h4>{{ "%.1f"|format(pdf_results.document_info.processing_time or 0) }}s</h4>
+                        <p class="text-muted mb-0">Processing Time</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="xai-card text-center">
+                        <i class="fas fa-brain fa-2x text-success mb-2"></i>
+                        <h4>{{ xai_explanations|length }}</h4>
+                        <p class="text-muted mb-0">XAI Analyses</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Results Tabs -->
+            <ul class="nav nav-tabs mb-4" id="resultsTab" role="tablist">
+                <li class="nav-item">
+                    <button class="nav-link xai-tab active" id="clauses-tab" data-bs-toggle="tab" 
+                            data-bs-target="#clauses" type="button">
+                        <i class="fas fa-list"></i> Important Clauses
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link xai-tab" id="xai-tab" data-bs-toggle="tab" 
+                            data-bs-target="#xai" type="button">
+                        <i class="fas fa-brain"></i> XAI Explanations
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link xai-tab" id="analytics-tab" data-bs-toggle="tab" 
+                            data-bs-target="#analytics" type="button">
+                        <i class="fas fa-chart-bar"></i> Analytics
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link xai-tab" id="insights-tab" data-bs-toggle="tab" 
+                            data-bs-target="#insights" type="button">
+                        <i class="fas fa-lightbulb"></i> Insights
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content" id="resultsTabContent">
+                <!-- Important Clauses Tab -->
+                <div class="tab-pane fade show active" id="clauses" role="tabpanel">
+                    <div class="row">
+                        {% for clause in pdf_results.important_clauses %}
+                        <div class="col-md-6 mb-3">
+                            <div class="clause-card">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <h6 class="text-primary">{{ clause.type.replace('_', ' ').title() }}</h6>
+                                    {% set importance = clause.importance_score %}
+                                    {% if importance >= 0.8 %}
+                                        <span class="importance-badge badge-critical">CRITICAL ({{ "%.2f"|format(importance) }})</span>
+                                    {% elif importance >= 0.6 %}
+                                        <span class="importance-badge badge-high">HIGH ({{ "%.2f"|format(importance) }})</span>
+                                    {% elif importance >= 0.4 %}
+                                        <span class="importance-badge badge-medium">MEDIUM ({{ "%.2f"|format(importance) }})</span>
+                                    {% else %}
+                                        <span class="importance-badge badge-low">LOW ({{ "%.2f"|format(importance) }})</span>
+                                    {% endif %}
+                                </div>
+                                
+                                <p class="clause-text">{{ clause.text[:300] }}{% if clause.text|length > 300 %}...{% endif %}</p>
+                                
+                                <div class="row text-center">
+                                    <div class="col-6">
+                                        <small class="text-muted">
+                                            <i class="fas fa-file-alt"></i> Page {{ clause.page_number }}
+                                        </small>
+                                    </div>
+                                    <div class="col-6">
+                                        <small class="text-muted">
+                                            <i class="fas fa-tags"></i> {{ clause.entities|length }} entities
+                                        </small>
+                                    </div>
+                                </div>
+                                
+                                {% if clause.entities %}
+                                <div class="mt-2">
+                                    {% for entity in clause.entities %}
+                                        <span class="badge bg-secondary me-1">{{ entity.type }}: {{ entity.text }}</span>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- XAI Explanations Tab -->
+                <div class="tab-pane fade" id="xai" role="tabpanel">
+                    {% for xai_item in xai_explanations %}
+                    <div class="xai-card mb-4">
+                        <h5 class="text-primary mb-3">
+                            <i class="fas fa-brain"></i> 
+                            {{ xai_item.clause.type.replace('_', ' ').title() }} Analysis
+                            <span class="badge bg-info ms-2">Score: {{ "%.2f"|format(xai_item.clause.importance_score) }}</span>
+                        </h5>
+                        
+                        <!-- Decision Summary -->
+                        <div class="mb-4">
+                            <h6><i class="fas fa-gavel"></i> Decision Summary</h6>
+                            <div class="reasoning-step">
+                                {{ xai_item.xai.decision_summary }}
+                            </div>
+                            
+                            <!-- Confidence Meter -->
+                            <div class="mt-3">
+                                <label class="form-label">Confidence Score</label>
+                                <div class="confidence-meter">
+                                    {% set confidence = xai_item.xai.confidence_score %}
+                                    <div class="confidence-fill 
+                                        {% if confidence >= 0.7 %}confidence-high
+                                        {% elif confidence >= 0.4 %}confidence-medium
+                                        {% else %}confidence-low{% endif %}"
+                                         style="width: {{ (confidence * 100)|round }}%">
+                                    </div>
+                                </div>
+                                <small class="text-muted">{{ "%.1f"|format(confidence * 100) }}% confident</small>
+                            </div>
+                        </div>
+                        
+                        <!-- XAI Sub-tabs -->
+                        <ul class="nav nav-pills mb-3" id="xai-{{loop.index}}-tab">
+                            <li class="nav-item">
+                                <button class="nav-link active" data-bs-toggle="pill" 
+                                        data-bs-target="#reasoning-{{loop.index}}">Reasoning</button>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-link" data-bs-toggle="pill" 
+                                        data-bs-target="#features-{{loop.index}}">Features</button>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-link" data-bs-toggle="pill" 
+                                        data-bs-target="#counterfactuals-{{loop.index}}">Counterfactuals</button>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-link" data-bs-toggle="pill" 
+                                        data-bs-target="#lime-{{loop.index}}">LIME</button>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-link" data-bs-toggle="pill" 
+                                        data-bs-target="#bias-{{loop.index}}">Bias</button>
+                            </li>
+                        </ul>
+                        
+                        <div class="tab-content">
+                            <!-- Reasoning Steps -->
+                            <div class="tab-pane fade show active" id="reasoning-{{loop.index}}">
+                                {% for step in xai_item.xai.reasoning_steps %}
+                                <div class="reasoning-step">
+                                    <i class="fas fa-arrow-right text-primary me-2"></i>{{ step }}
+                                </div>
+                                {% endfor %}
+                            </div>
+                            
+                            <!-- Feature Importance -->
+                            <div class="tab-pane fade" id="features-{{loop.index}}">
+                                <h6>Feature Importance</h6>
+                                {% for feature, importance in xai_item.xai.feature_importance.items() %}
+                                <div class="mb-2">
+                                    <div class="d-flex justify-content-between">
+                                        <span>{{ feature.replace('_', ' ').title() }}</span>
+                                        <span class="text-muted">{{ "%.3f"|format(importance) }}</span>
+                                    </div>
+                                    <div class="feature-bar">
+                                        <div class="feature-fill" style="width: {{ (importance * 100)|round }}%"></div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            
+                            <!-- Counterfactual Explanations -->
+                            <div class="tab-pane fade" id="counterfactuals-{{loop.index}}">
+                                <h6><i class="fas fa-exchange-alt text-warning"></i> Counterfactual Examples</h6>
+                                <p class="text-muted small mb-3">Shows how small changes in legal language could lead to different outcomes</p>
+                                
+                                {% if xai_item.xai.counterfactual_examples %}
+                                    {% for counterfactual in xai_item.xai.counterfactual_examples %}
+                                    <div class="counterfactual-card mb-3 p-3" 
+                                         style="background: {% if counterfactual.impact == 'high' %}#ffebee{% elif counterfactual.impact == 'medium' %}#fff3e0{% else %}#e8f5e8{% endif %}; 
+                                                border-left: 4px solid {% if counterfactual.impact == 'high' %}#f44336{% elif counterfactual.impact == 'medium' %}#ff9800{% else %}#4caf50{% endif %}; 
+                                                border-radius: 8px;">
+                                        
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <h6 class="mb-1">{{ counterfactual.type.replace('_', ' ').title() }}</h6>
+                                            <div>
+                                                <span class="badge {% if counterfactual.impact == 'high' %}bg-danger{% elif counterfactual.impact == 'medium' %}bg-warning{% else %}bg-success{% endif %}">
+                                                    {{ counterfactual.impact.upper() }} Impact
+                                                </span>
+                                                {% if counterfactual.likelihood %}
+                                                <span class="badge bg-info ms-1">{{ counterfactual.likelihood.title() }}</span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="counterfactual-text mb-2">
+                                            <strong>Alternative scenario:</strong><br>
+                                            <em>"{{ counterfactual.text[:200] }}{% if counterfactual.text|length > 200 %}..."{% endif %}</em>
+                                        </div>
+                                        
+                                        {% if counterfactual.changes %}
+                                        <div class="changes-made mb-2">
+                                            <small><strong>Changes made:</strong></small>
+                                            <ul class="list-unstyled ms-3">
+                                                {% for change in counterfactual.changes %}
+                                                <li><i class="fas fa-arrow-right text-primary me-1"></i>{{ change }}</li>
+                                                {% endfor %}
+                                            </ul>
+                                        </div>
+                                        {% endif %}
+                                        
+                                        {% if counterfactual.explanation %}
+                                        <div class="explanation">
+                                            <small class="text-muted"><strong>Explanation:</strong> {{ counterfactual.explanation }}</small>
+                                        </div>
+                                        {% endif %}
+                                        
+                                        {% if counterfactual.target_outcome %}
+                                        <div class="mt-2">
+                                            <span class="badge bg-secondary">Target: {{ counterfactual.target_outcome.upper() }}</span>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        No counterfactual examples available for this clause.
+                                    </div>
+                                {% endif %}
+                                
+                                <!-- Counterfactual Insights -->
+                                <div class="counterfactual-insights mt-4 p-3" style="background: #f8f9fa; border-radius: 8px;">
+                                    <h6><i class="fas fa-lightbulb text-warning"></i> Key Insights</h6>
+                                    <ul class="mb-0">
+                                        <li><strong>Legal Sensitivity:</strong> Small word changes can dramatically alter legal meaning</li>
+                                        <li><strong>Risk Assessment:</strong> Consider alternative interpretations in contract drafting</li>
+                                        <li><strong>Precedent Analysis:</strong> Each scenario may have different case law support</li>
+                                        <li><strong>Negotiation Strategy:</strong> Use counterfactuals to explore compromise positions</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <!-- LIME Explanation -->
+                            <div class="tab-pane fade" id="lime-{{loop.index}}">
+                                <h6>LIME Word Importance</h6>
+                                {% if xai_item.xai.lime_explanation.word_importance %}
+                                    <div class="word-importance-viz">
+                                        {% for word, importance in xai_item.xai.lime_explanation.word_importance.items() %}
+                                            {% set intensity = ((importance * 255)|round) %}
+                                            <span class="word-token" 
+                                                  style="background-color: rgba(0, 123, 255, {{ importance }}); 
+                                                         padding: 2px 6px; margin: 2px; border-radius: 4px;
+                                                         color: {% if importance > 0.5 %}white{% else %}black{% endif %};">
+                                                {{ word }}
+                                            </span>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Bias Analysis -->
+                            <div class="tab-pane fade" id="bias-{{loop.index}}">
+                                <h6>Bias Analysis</h6>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p><strong>Demographic Neutrality:</strong> 
+                                           {{ "%.2f"|format(xai_item.xai.bias_analysis.demographic_neutrality_score or 0.8) }}</p>
+                                        <p><strong>Feature Balance:</strong> 
+                                           {{ "%.2f"|format(xai_item.xai.bias_analysis.fairness_metrics.feature_balance or 0.8) }}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p><strong>Representation Fairness:</strong> 
+                                           {{ "%.2f"|format(xai_item.xai.bias_analysis.fairness_metrics.representation_fairness or 0.8) }}</p>
+                                        <p><strong>Outcome Equity:</strong> 
+                                           {{ "%.2f"|format(xai_item.xai.bias_analysis.fairness_metrics.outcome_equity or 0.8) }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Analytics Tab -->
+                <div class="tab-pane fade" id="analytics" role="tabpanel">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="chart-container">
+                                <h6><i class="fas fa-chart-bar text-primary"></i> Clause Importance Distribution</h6>
+                                <p class="text-muted small">Color-coded by importance level: Red (Critical), Yellow (High), Blue (Medium), Green (Low)</p>
+                                <canvas id="importanceChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="chart-container">
+                                <h6><i class="fas fa-chart-pie text-success"></i> Clause Types Distribution</h6>
+                                <p class="text-muted small">Breakdown of different legal clause categories found</p>
+                                <canvas id="typesChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="chart-container">
+                                <h6><i class="fas fa-chart-line text-info"></i> Confidence Score Trends</h6>
+                                <p class="text-muted small">AI confidence levels across analyzed clauses with average trend line</p>
+                                <canvas id="confidenceChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="chart-container">
+                                <h6><i class="fas fa-map-marked text-warning"></i> Page Distribution Heatmap</h6>
+                                <p class="text-muted small">Bubble size indicates max importance; color shows importance level</p>
+                                <canvas id="pageChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Insights Tab -->
+                <div class="tab-pane fade" id="insights" role="tabpanel">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="xai-card">
+                                <h5><i class="fas fa-lightbulb"></i> Key Insights</h5>
+                                <ul class="list-group list-group-flush">
+                                    <li class="list-group-item">
+                                        <i class="fas fa-check-circle text-success"></i>
+                                        Document contains {{ pdf_results.important_clauses|length }} important clauses above {{ min_importance }} threshold
+                                    </li>
+                                    <li class="list-group-item">
+                                        <i class="fas fa-star text-warning"></i>
+                                        Average importance score is {{ "%.3f"|format(pdf_results.clause_summary.avg_importance_score) }}, 
+                                        indicating {% if pdf_results.clause_summary.avg_importance_score > 0.6 %}high{% elif pdf_results.clause_summary.avg_importance_score > 0.4 %}moderate{% else %}low{% endif %} overall significance
+                                    </li>
+                                    {% if pdf_results.clause_summary.clause_types_distribution %}
+                                    <li class="list-group-item">
+                                        <i class="fas fa-chart-pie text-info"></i>
+                                        Most common clause types: 
+                                        {% for type, count in pdf_results.clause_summary.clause_types_distribution.items() %}
+                                            {{ type.replace('_', ' ').title() }} ({{ count }}){% if not loop.last %}, {% endif %}
+                                        {% endfor %}
+                                    </li>
+                                    {% endif %}
+                                    <li class="list-group-item">
+                                        <i class="fas fa-clock text-primary"></i>
+                                        Processing completed in {{ "%.1f"|format(pdf_results.document_info.processing_time) }} seconds using {{ jurisdiction }} jurisdiction
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Enhanced Chart configurations
+        Chart.defaults.font.family = 'Segoe UI';
+        Chart.defaults.plugins.legend.display = true;
+        Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+        Chart.defaults.plugins.tooltip.titleColor = 'white';
+        Chart.defaults.plugins.tooltip.bodyColor = 'white';
+        Chart.defaults.plugins.tooltip.cornerRadius = 8;
+        
+        // Enhanced Importance Distribution Chart with gradient and better visualization
+        const importanceData = {{ pdf_results.important_clauses | map(attribute='importance_score') | list | tojson }};
+        const importanceLabels = {{ pdf_results.important_clauses | map(attribute='type') | list | tojson }};
+        
+        // Create gradient colors based on importance scores
+        const ctx1 = document.getElementById('importanceChart').getContext('2d');
+        const importanceColors = importanceData.map(score => {
+            if (score >= 0.8) return 'rgba(220, 53, 69, 0.8)'; // Red for critical
+            if (score >= 0.7) return 'rgba(255, 193, 7, 0.8)'; // Yellow for high
+            if (score >= 0.6) return 'rgba(13, 202, 240, 0.8)'; // Cyan for medium
+            return 'rgba(40, 167, 69, 0.8)'; // Green for low
+        });
+        
+        new Chart(ctx1, {
+            type: 'bar',
+            data: {
+                labels: importanceLabels.map((label, i) => `${label.replace('_', ' ')} (${importanceData[i].toFixed(2)})`),
+                datasets: [{
+                    label: 'Importance Score',
+                    data: importanceData,
+                    backgroundColor: importanceColors,
+                    borderColor: importanceColors.map(color => color.replace('0.8', '1')),
+                    borderWidth: 2,
+                    borderRadius: 8,
+                    borderSkipped: false
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { 
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const score = context.parsed.y;
+                                const level = score >= 0.8 ? 'Critical' : score >= 0.7 ? 'High' : score >= 0.6 ? 'Medium' : 'Low';
+                                return `${level}: ${score.toFixed(3)}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: { 
+                        beginAtZero: true, 
+                        max: 1,
+                        title: { display: true, text: 'Importance Score', font: { weight: 'bold' } },
+                        grid: { color: 'rgba(0, 0, 0, 0.1)' }
+                    },
+                    x: {
+                        title: { display: true, text: 'Clause Types', font: { weight: 'bold' } },
+                        ticks: { maxRotation: 45 }
+                    }
+                },
+                animation: { duration: 1500, easing: 'easeInOutQuart' }
+            }
+        });
+        
+        // Enhanced Types Distribution Chart with better colors and labels
+        const typesData = {{ pdf_results.clause_summary.clause_types_distribution | tojson }};
+        const typeColors = [
+            'rgba(0, 123, 255, 0.9)',   // Blue
+            'rgba(40, 167, 69, 0.9)',   // Green
+            'rgba(255, 193, 7, 0.9)',   // Yellow
+            'rgba(220, 53, 69, 0.9)',   // Red
+            'rgba(111, 66, 193, 0.9)',  // Purple
+            'rgba(13, 202, 240, 0.9)',  // Cyan
+            'rgba(253, 126, 20, 0.9)',  // Orange
+            'rgba(108, 117, 125, 0.9)'  // Gray
+        ];
+        
+        new Chart(document.getElementById('typesChart'), {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(typesData).map(t => t.replace('_', ' ').toUpperCase()),
+                datasets: [{
+                    data: Object.values(typesData),
+                    backgroundColor: typeColors,
+                    borderColor: '#ffffff',
+                    borderWidth: 3,
+                    hoverOffset: 10
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { 
+                        position: 'bottom',
+                        labels: { 
+                            padding: 20,
+                            usePointStyle: true,
+                            font: { size: 12, weight: 'bold' }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = ((context.parsed / total) * 100).toFixed(1);
+                                return `${context.label}: ${context.parsed} (${percentage}%)`;
+                            }
+                        }
+                    }
+                },
+                animation: { animateRotate: true, duration: 2000 }
+            }
+        });
+        
+        // Enhanced Confidence Score Distribution with area chart and trend line
+        const confidenceData = {{ xai_explanations | map(attribute='xai.confidence_score') | list | tojson }};
+        const ctx3 = document.getElementById('confidenceChart').getContext('2d');
+        const gradient = ctx3.createLinearGradient(0, 0, 0, 400);
+        gradient.addColorStop(0, 'rgba(0, 123, 255, 0.4)');
+        gradient.addColorStop(1, 'rgba(0, 123, 255, 0.0)');
+        
+        new Chart(ctx3, {
+            type: 'line',
+            data: {
+                labels: Array.from({length: confidenceData.length}, (_, i) => `Clause ${i + 1}`),
+                datasets: [{
+                    label: 'Confidence Score',
+                    data: confidenceData,
+                    borderColor: 'rgba(0, 123, 255, 1)',
+                    backgroundColor: gradient,
+                    tension: 0.4,
+                    fill: true,
+                    borderWidth: 3,
+                    pointBackgroundColor: 'rgba(0, 123, 255, 1)',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2,
+                    pointRadius: 6,
+                    pointHoverRadius: 8
+                }, {
+                    label: 'Average Confidence',
+                    data: Array(confidenceData.length).fill(confidenceData.reduce((a, b) => a + b, 0) / confidenceData.length),
+                    borderColor: 'rgba(220, 53, 69, 1)',
+                    backgroundColor: 'transparent',
+                    borderDash: [5, 5],
+                    borderWidth: 2,
+                    pointRadius: 0,
+                    fill: false
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { 
+                        display: true,
+                        position: 'top',
+                        labels: { font: { weight: 'bold' } }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            afterLabel: function(context) {
+                                const score = context.parsed.y;
+                                const level = score >= 0.8 ? 'High Confidence' : score >= 0.5 ? 'Medium Confidence' : 'Low Confidence';
+                                return level;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: { 
+                        beginAtZero: true, 
+                        max: 1,
+                        title: { display: true, text: 'Confidence Level', font: { weight: 'bold' } },
+                        grid: { color: 'rgba(0, 0, 0, 0.1)' }
+                    },
+                    x: {
+                        title: { display: true, text: 'Analysis Sequence', font: { weight: 'bold' } }
+                    }
+                },
+                animation: { duration: 2000, easing: 'easeInOutQuart' }
+            }
+        });
+        
+        // Enhanced Page Distribution with bubble chart and heat mapping
+        const pageData = {{ pdf_results.important_clauses | map(attribute='page_number') | list | tojson }};
+        const pageImportanceData = {{ pdf_results.important_clauses | map(attribute='importance_score') | list | tojson }};
+        
+        const pageStats = {};
+        pageData.forEach((page, index) => {
+            if (!pageStats[page]) {
+                pageStats[page] = { count: 0, totalImportance: 0, maxImportance: 0 };
+            }
+            pageStats[page].count++;
+            pageStats[page].totalImportance += pageImportanceData[index];
+            pageStats[page].maxImportance = Math.max(pageStats[page].maxImportance, pageImportanceData[index]);
+        });
+        
+        const bubbleData = Object.entries(pageStats).map(([page, stats]) => ({
+            x: parseInt(page),
+            y: stats.count,
+            r: Math.max(8, stats.maxImportance * 25), // Bubble size based on max importance
+            importance: stats.maxImportance,
+            avgImportance: stats.totalImportance / stats.count
+        }));
+        
+        new Chart(document.getElementById('pageChart'), {
+            type: 'bubble',
+            data: {
+                datasets: [{
+                    label: 'Page Analysis',
+                    data: bubbleData,
+                    backgroundColor: bubbleData.map(point => {
+                        const alpha = Math.max(0.4, point.importance);
+                        if (point.importance >= 0.8) return `rgba(220, 53, 69, ${alpha})`;
+                        if (point.importance >= 0.7) return `rgba(255, 193, 7, ${alpha})`;
+                        if (point.importance >= 0.6) return `rgba(13, 202, 240, ${alpha})`;
+                        return `rgba(40, 167, 69, ${alpha})`;
+                    }),
+                    borderColor: bubbleData.map(point => {
+                        if (point.importance >= 0.8) return 'rgba(220, 53, 69, 1)';
+                        if (point.importance >= 0.7) return 'rgba(255, 193, 7, 1)';
+                        if (point.importance >= 0.6) return 'rgba(13, 202, 240, 1)';
+                        return 'rgba(40, 167, 69, 1)';
+                    }),
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            title: function(context) {
+                                return `Page ${context[0].parsed.x}`;
+                            },
+                            label: function(context) {
+                                const point = context.raw;
+                                return [
+                                    `Clauses: ${point.y}`,
+                                    `Max Importance: ${point.importance.toFixed(3)}`,
+                                    `Avg Importance: ${point.avgImportance.toFixed(3)}`
+                                ];
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: { 
+                        title: { display: true, text: 'Page Number', font: { weight: 'bold' } },
+                        grid: { color: 'rgba(0, 0, 0, 0.1)' }
+                    },
+                    y: { 
+                        title: { display: true, text: 'Number of Clauses', font: { weight: 'bold' } }, 
+                        beginAtZero: true,
+                        grid: { color: 'rgba(0, 0, 0, 0.1)' }
+                    }
+                },
+                animation: { duration: 2000, easing: 'easeInOutQuart' }
+            }
+        });
+        
+        // Add chart legends with color coding
+        const legendHTML = `
+            <div class="mt-3 p-3 bg-light rounded">
+                <h6><i class="fas fa-info-circle"></i> Chart Legend</h6>
+                <div class="row">
+                    <div class="col-md-6">
+                        <small><strong>Importance Levels:</strong></small><br>
+                        <small><span style="color: #dc3545;">●</span> Critical (≥0.8)</small><br>
+                        <small><span style="color: #ffc107;">●</span> High (≥0.7)</small><br>
+                        <small><span style="color: #0dcaf0;">●</span> Medium (≥0.6)</small><br>
+                        <small><span style="color: #28a745;">●</span> Low (<0.6)</small>
+                    </div>
+                    <div class="col-md-6">
+                        <small><strong>Page Chart:</strong></small><br>
+                        <small>• Bubble size = Max importance on page</small><br>
+                        <small>• Color intensity = Importance level</small><br>
+                        <small>• Y-axis = Number of clauses</small>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Add legend after charts load
+        setTimeout(() => {
+            const analyticsTab = document.getElementById('analytics');
+            if (analyticsTab && !document.getElementById('chart-legend')) {
+                const legendDiv = document.createElement('div');
+                legendDiv.id = 'chart-legend';
+                legendDiv.innerHTML = legendHTML;
+                analyticsTab.appendChild(legendDiv);
+            }
+        }, 1000);
+    </script>
+</body>
+</html>
